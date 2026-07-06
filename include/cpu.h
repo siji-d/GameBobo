@@ -2,4 +2,5 @@
 #include <common.h>
 
 void cpu_init();
-void cpu_step();
+
+bool cpu_step();
