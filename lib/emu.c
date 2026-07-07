@@ -29,9 +29,9 @@ int emu_run(int argc, char** argv) {
     printf("Cart Loaded...\n");
 
     SDL_Init(SDL_INIT_VIDEO);
-    printf("SDL init\n");
+    printf("SDL INIT\n");
     TTF_Init();
-    printf("TTF init\n");
+    printf("TTF INIT\n");
 
     cpu_init();
     
@@ -54,4 +54,11 @@ int emu_run(int argc, char** argv) {
     }
     
     return 0;
+}
+
+void emu_cycles(int cycles){
+    //spend some cycles for synching purposes
+
+    printf("emu_cycles...\n");
+    NO_IMP;
 }
