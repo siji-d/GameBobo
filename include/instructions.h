@@ -94,7 +94,7 @@ typedef enum {
 } condType;
 
 typedef struct {
-    inType inst;
+    inType type;
     addrMode mode;
     regType reg_1;
     regType reg_2;
