@@ -57,8 +57,5 @@ int emu_run(int argc, char** argv) {
 }
 
 void emu_cycles(int cycles){
-    //spend some cycles for synching purposes
-
-    printf("emu_cycles...\n");
-    NO_IMP;
+    //spend some cycles for accuracy and sync
 }

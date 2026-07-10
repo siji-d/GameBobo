@@ -6,8 +6,8 @@ u16 reverse(u16 n) {
     return ((n & 0xFF00) >> 8) | ((n & 0x00FF) << 8);
 }
 
-u16 read_reg(regType rt) {
-    switch(rt) {
+u16 read_reg(regType reg) {
+    switch(reg) {
         case RG_A: return ctx.regs.a;
         case RG_F: return ctx.regs.f;
         case RG_B: return ctx.regs.b;
@@ -26,4 +26,35 @@ u16 read_reg(regType rt) {
         case RG_SP: return ctx.regs.sp;
         default: return 0;
     }
+}
+
+bool is16Bit(regType reg) {
+    return reg >= RG_AF;
+}
+
+void set_reg(regType reg, u16 val) {
+    switch(reg) {
+        case RG_A: ctx.regs.a = (val & 0x00FF); break;
+        case RG_F: ctx.regs.f = (val & 0x00FF); break;
+        case RG_B: ctx.regs.b = (val & 0x00FF); break;
+        case RG_C: ctx.regs.c = (val & 0x00FF); break;
+        case RG_D: ctx.regs.d = (val & 0x00FF); break;
+        case RG_E: ctx.regs.e = (val & 0x00FF); break;
+        case RG_H: ctx.regs.h = (val & 0x00FF); break;
+        case RG_L: ctx.regs.l = (val & 0x00FF); break;
+
+        case RG_AF: *((u16 *)&ctx.regs.a) = reverse(val); break;
+        case RG_BC: *((u16 *)&ctx.regs.b) = reverse(val); break;
+        case RG_DE: *((u16 *)&ctx.regs.d) = reverse(val); break;
+        case RG_HL: *((u16 *)&ctx.regs.h) = reverse(val); break;
+
+        case RG_PC: ctx.regs.pc = val; break;
+        case RG_SP: ctx.regs.sp = val; break;
+        case RG_NONE: break;
+        default: break;
+    }
+}
+
+cpuRegisters *get_cpu_regs() {
+    return &ctx.regs;
 }

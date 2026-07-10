@@ -14,45 +14,6 @@ static void fetch_instruction() {
     ctx.inst = instruction_by_opcode(ctx.opcode);
 }
 
-static void fetch_data() {
-    ctx.mem_dest = 0;
-    ctx.dest_is_mem = false;
-
-    switch (ctx.inst->mode) {
-        case AM_IMP:
-            ctx.fetched_data = 0x0;
-            return;
-
-        case AM_R:
-            ctx.fetched_data = read_reg(ctx.inst->reg_1);
-            return;
-
-        case AM_R_D8:
-            ctx.fetched_data = bus_read(ctx.regs.pc);
-            //emu_cycles(1);
-            ctx.regs.pc++;
-            return; 
-
-        case AM_D16:
-        {
-            u16 lo = bus_read(ctx.regs.pc);
-            //emu_cycles(1);
-
-            u16 hi = bus_read(ctx.regs.pc + 1);
-            //emu_cycles(1);
-            
-            ctx.fetched_data = lo | (hi << 8);
-            
-            ctx.regs.pc += 2;
-            return;
-        }
-    
-    default:
-        printf("oops, unknown addr mode %d\n", ctx.inst->mode);
-        exit(-7);
-        return;
-    }
-}
 
 static void execute() {
     IN_PROC proc = inst_get_processor(ctx.inst->type);
@@ -65,15 +26,16 @@ static void execute() {
 }
 
 static void step_log(u16 pc) {
-    char *operands[10];
+    char operands[11];
     if (ctx.inst->mode == AM_IMP) { 
         snprintf(operands, sizeof(operands), "(%02X)", bus_read(pc));
     } else {
         snprintf(operands, sizeof(operands), "(%02X %02X %02X)", bus_read(pc), bus_read(pc + 1), bus_read(pc + 2));
     }
 
-    printf("%04X: %-7s %-11s A: %02X  B: %02X C: %02X F: %d%d%d%d\n",
-    pc, inst_name(ctx.inst->type), operands, ctx.regs.a, ctx.regs.b, ctx.regs.c, BIT(ctx.regs.f, 7), BIT(ctx.regs.f, 6), BIT(ctx.regs.f, 5), BIT(ctx.regs.f, 4));
+    printf("%04X: %-7s %-11s A: 0x%02X BC: 0x%02X%02X DE: 0x%02X%02X, HL: 0x%02X%02X, F: 0b%d%d%d%d, SP: 0x%04X\n",
+        pc, inst_name(ctx.inst->type), operands, ctx.regs.a, ctx.regs.b, ctx.regs.c, ctx.regs.d, ctx.regs.e, ctx.regs.h, ctx.regs.l,
+        BIT(ctx.regs.f, 7), BIT(ctx.regs.f, 6), BIT(ctx.regs.f, 5), BIT(ctx.regs.f, 4), ctx.regs.sp);
 }
 
 bool cpu_step() {
@@ -94,4 +56,20 @@ bool cpu_step() {
     }
     
     return true;
+}
+
+u8 get_ie_register(){
+    return ctx.ie_register;
+}
+
+void set_ie_register(u8 val) {
+    ctx.ie_register = val;
+}
+
+u8 get_if_register() {
+    return ctx.if_register;
+}
+
+void set_if_register(u8 val) {
+    ctx.if_register = val;
 }
