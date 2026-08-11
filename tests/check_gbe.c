@@ -4,10 +4,14 @@
 #include <emu.h>
 
 #include <cpu.h>
+#include <cart.h>
 
 START_TEST(test_nothing) {
-    bool b = cpu_step();
-    ck_assert_uint_eq(b, false);
+    bool b = false;
+    cart_load("../roms/tetris.gb");
+    b = cpu_step();
+        //bool b = cpu_step();
+    ck_assert_uint_eq(b, true);
 } END_TEST
 
 Suite *stack_suite() {

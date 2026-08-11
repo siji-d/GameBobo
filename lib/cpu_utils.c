@@ -1,4 +1,5 @@
 #include <cpu.h>
+#include <bus.h>
 
 extern cpuContext ctx;
 
@@ -52,6 +53,39 @@ void set_reg(regType reg, u16 val) {
         case RG_SP: ctx.regs.sp = val; break;
         case RG_NONE: break;
         default: break;
+    }
+}
+
+u8 read_reg8(regType reg) {
+    switch(reg) {
+        case RG_A: return ctx.regs.a;
+        case RG_F: return ctx.regs.f;
+        case RG_B: return ctx.regs.b;
+        case RG_C: return ctx.regs.c;
+        case RG_D: return ctx.regs.d;
+        case RG_E: return ctx.regs.e;
+        case RG_H: return ctx.regs.h;
+        case RG_L: return ctx.regs.l;
+        case RG_HL: return bus_read(read_reg(RG_HL));
+
+        default: printf("ooops bad reg8: %d", reg);
+        NO_IMP;
+    }
+
+}
+
+void set_reg8(regType reg, u8 val) {
+    switch(reg) {
+        case RG_A: ctx.regs.a = (val & 0xFF); break;
+        case RG_F: ctx.regs.f = (val & 0xFF); break;
+        case RG_B: ctx.regs.b = (val & 0xFF); break;
+        case RG_C: ctx.regs.c = (val & 0xFF); break;
+        case RG_D: ctx.regs.d = (val & 0xFF); break;
+        case RG_E: ctx.regs.e = (val & 0xFF); break;
+        case RG_H: ctx.regs.h = (val & 0xFF); break;
+        case RG_L: ctx.regs.l = (val & 0xFF); break; 
+        case RG_HL: bus_write(read_reg(RG_HL), val); break;
+        default: printf("ooops bad reg8: %d", reg); break;
     }
 }
 

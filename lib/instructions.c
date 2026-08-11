@@ -171,7 +171,40 @@ instruction instructions[0x100] = {
     [0x9F] = {IN_SBC, AM_R_R, RG_A, RG_A},
 
     //OxAX
+    [0xA0] = {IN_AND, AM_R, RG_B},
+    [0xA1] = {IN_AND, AM_R, RG_C},
+    [0xA2] = {IN_AND, AM_R, RG_D},
+    [0xA3] = {IN_AND, AM_R, RG_E},
+    [0xA4] = {IN_AND, AM_R, RG_H},
+    [0xA5] = {IN_AND, AM_R, RG_L},
+    [0xA6] = {IN_AND, AM_MR, RG_HL},
+    [0xA7] = {IN_AND, AM_R, RG_A},
+    [0xA8] = {IN_XOR, AM_R, RG_B},
+    [0xA9] = {IN_XOR, AM_R, RG_C},
+    [0xAA] = {IN_XOR, AM_R, RG_D},
+    [0xAB] = {IN_XOR, AM_R, RG_E},
+    [0xAC] = {IN_XOR, AM_R, RG_H},
+    [0xAD] = {IN_XOR, AM_R, RG_L},
+    [0xAE] = {IN_XOR, AM_MR, RG_HL},
     [0xAF] = {IN_XOR, AM_R, RG_A},
+
+    //OxBX
+    [0xB0] = {IN_OR, AM_R, RG_B},
+    [0xB1] = {IN_OR, AM_R, RG_C},
+    [0xB2] = {IN_OR, AM_R, RG_D},
+    [0xB3] = {IN_OR, AM_R, RG_E},
+    [0xB4] = {IN_OR, AM_R, RG_H},
+    [0xB5] = {IN_OR, AM_R, RG_L},
+    [0xB6] = {IN_OR, AM_MR, RG_HL},
+    [0xB7] = {IN_OR, AM_R, RG_A},
+    [0xB8] = {IN_CP, AM_R, RG_B},
+    [0xB9] = {IN_CP, AM_R, RG_C},
+    [0xBA] = {IN_CP, AM_R, RG_D},
+    [0xBB] = {IN_CP, AM_R, RG_E},
+    [0xBC] = {IN_CP, AM_R, RG_H},
+    [0xBD] = {IN_CP, AM_R, RG_L},
+    [0xBE] = {IN_CP, AM_MR, RG_HL},
+    [0xBF] = {IN_CP, AM_R, RG_A},
 
     //0xCX
     [0xC0] = {IN_RET, AM_IMP, RG_NONE, RG_NONE, CND_NZ},
@@ -211,9 +244,12 @@ instruction instructions[0x100] = {
     [0xE1] = {IN_POP, AM_IMP, RG_HL},
     [0xE2] = {IN_LD, AM_MR_R, RG_C, RG_A},
     [0xE5] = {IN_PUSH, AM_IMP, RG_HL},
+    [0xE6] = {IN_AND, AM_D8},
     [0xE7] = {IN_RST, AM_IMP, RG_NONE, RG_NONE, CND_NONE, 0x20},
+    [0xE8] = {IN_ADD, AM_R_D8, RG_SP},
     [0xE9] = {IN_JP, AM_MR, RG_HL},
     [0xEA] = {IN_LD, AM_A16_R, RG_NONE, RG_A},
+    [0xEE] = {IN_XOR, AM_D8},
     [0xEF] = {IN_RST, AM_IMP, RG_NONE, RG_NONE, CND_NONE, 0x28},
 
 
@@ -223,8 +259,11 @@ instruction instructions[0x100] = {
     [0xF2] = {IN_LD, AM_R_MR, RG_A, RG_C},
     [0xF3] = {IN_DI},
     [0xF5] = {IN_PUSH, AM_IMP, RG_AF},
+    [0xF6] = {IN_OR, AM_D8},
     [0xF7] = {IN_RST, AM_IMP, RG_NONE, RG_NONE, CND_NONE, 0x30},
     [0xFA] = {IN_LD, AM_R_A16, RG_A},
+    [0xFB] = {IN_EI},
+    [0xFE] = {IN_CP, AM_D8},
     [0xFF] = {IN_RST, AM_IMP, RG_NONE, RG_NONE, CND_NONE, 0x38},
 };
 

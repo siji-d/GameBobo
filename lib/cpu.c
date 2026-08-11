@@ -26,16 +26,24 @@ static void execute() {
 }
 
 static void step_log(u16 pc) {
-    char operands[11];
+    char operands[16];
+    char flags[16];
+
+    sprintf(flags, "%c%c%c%c", 
+        (BIT(ctx.regs.f, 7) ? 'Z' : '-'),
+        (BIT(ctx.regs.f, 6) ? 'N' : '-'),
+        (BIT(ctx.regs.f, 5) ? 'H' : '-'),
+        (BIT(ctx.regs.f, 4) ? 'C' : '-'));
+    
     if (ctx.inst->mode == AM_IMP) { 
         snprintf(operands, sizeof(operands), "(%02X)", bus_read(pc));
     } else {
         snprintf(operands, sizeof(operands), "(%02X %02X %02X)", bus_read(pc), bus_read(pc + 1), bus_read(pc + 2));
     }
 
-    printf("%04X: %-7s %-11s A: 0x%02X BC: 0x%02X%02X DE: 0x%02X%02X, HL: 0x%02X%02X, F: 0b%d%d%d%d, SP: 0x%04X\n",
-        pc, inst_name(ctx.inst->type), operands, ctx.regs.a, ctx.regs.b, ctx.regs.c, ctx.regs.d, ctx.regs.e, ctx.regs.h, ctx.regs.l,
-        BIT(ctx.regs.f, 7), BIT(ctx.regs.f, 6), BIT(ctx.regs.f, 5), BIT(ctx.regs.f, 4), ctx.regs.sp);
+    printf("%08llX  %04X: %-7s %-11s A: %02X BC: %02X%02X DE: %02X%02X, HL: %02X%02X, FLAGS: %4s, SP: 0x%04X\n",
+        emu_get_context()->ticks, pc, inst_name(ctx.inst->type), operands, ctx.regs.a, ctx.regs.b, ctx.regs.c, ctx.regs.d, ctx.regs.e, ctx.regs.h, ctx.regs.l,
+       flags, ctx.regs.sp);
 }
 
 bool cpu_step() {

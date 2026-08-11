@@ -44,6 +44,10 @@ u16 read_reg(regType reg);
 
 void set_reg(regType reg, u16 val);
 
+u8 read_reg8(regType reg);
+
+void set_reg8(regType reg, u8 val);
+
 u8 get_ie_register();
 
 void set_ie_register(u8 val);

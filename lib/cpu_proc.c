@@ -107,7 +107,7 @@ static void proc_inc(cpuContext *ctx) {
 }
 
 static void proc_dec(cpuContext *ctx) {
-    u16 val = ctx->inst->reg_1 - 1;;
+    u16 val = read_reg(ctx->inst->reg_1) - 1;;
     
     if (is16Bit(ctx->inst->reg_1)) {
         emu_cycles(1);
@@ -188,8 +188,8 @@ static void proc_sbc(cpuContext *ctx) {
     u16 val = read_reg(ctx->inst->reg_1) + CPU_FLAG_C;
     
     int z = read_reg(ctx->inst->reg_1) - val == 0;
-    int h = ((int)read_reg(ctx->inst->reg_1) & 0xF) - ((int)ctx->fetched_data & 0xF) - (int)(CPU_FLAG_C) < 0;
-    int c = (int)read_reg(ctx->inst->reg_1) - (int)ctx->fetched_data  - (int)(CPU_FLAG_C) < 0;
+    int h = ((int)read_reg(ctx->inst->reg_1) & 0xF) - ((int)ctx->fetched_data & 0xF) - (int)CPU_FLAG_C < 0;
+    int c = (int)read_reg(ctx->inst->reg_1) - (int)ctx->fetched_data  - (int)CPU_FLAG_C < 0;
 
     set_reg(ctx->inst->reg_1, read_reg(ctx->inst->reg_1) - val );
     set_cpu_flags(ctx, z, 1, h, c);
@@ -242,6 +242,30 @@ static void proc_ret(cpuContext *ctx) {
     }
 }
 
+static void proc_cb(cpuContext *ctx) {
+    u8 inst = ctx->fetched_data;
+    regType r = rg_decode(inst & 0b111); //bottom 3 bits tell us the register
+    u8 b = (inst >> 3) & 0b111; //next three bits tell us which bit to operate on, for 
+    u8 op = (inst >> 6) & 0b11; //the rests tells us which exact operation we want
+    //we dont need the top two bits, thats just always CB
+
+    emu_cycles(1);
+
+    if (r == RG_HL) {
+        emu_cycles(2);
+
+    }
+
+    switch(op) {
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+    }
+
+    
+}
+
 
 static void proc_call(cpuContext *ctx) {
     goto_addr(ctx, ctx->fetched_data, true);
@@ -252,9 +276,24 @@ static void proc_reti(cpuContext *ctx) {
     proc_ret(ctx);   
 }
 
+static void proc_and(cpuContext *ctx) {
+    ctx->regs.a &= (ctx->fetched_data & 0x00FF);
+    set_cpu_flags(ctx, ctx->regs.a == 0, 0, 1, 0);
+}
+
 static void proc_xor(cpuContext *ctx) {
     ctx->regs.a ^= (ctx->fetched_data & 0x00FF);
-    set_cpu_flags(ctx, ctx->regs.a, 0, 0, 0);
+    set_cpu_flags(ctx, ctx->regs.a == 0, 0, 0, 0);
+}
+
+static void proc_or(cpuContext *ctx) {
+    ctx->regs.a |= (ctx->fetched_data & 0x00FF);
+    set_cpu_flags(ctx, ctx->regs.a == 0, 0, 0, 0);
+}
+
+static void proc_cp(cpuContext *ctx) {
+    u8 val = ctx->regs.a - ctx->fetched_data;
+    set_cpu_flags(ctx, val == 0, 1, (ctx->regs.a & 0xF) - (val & 0xF) & 0x10, ctx->regs.a < ctx->fetched_data);
 }
 
 static void proc_ldh(cpuContext *ctx) {
@@ -267,6 +306,10 @@ static void proc_ldh(cpuContext *ctx) {
 
 static void proc_di(cpuContext *ctx) {
     ctx->ime_flag = false;
+}
+
+static void proc_ei(cpuContext *ctx) {
+    ctx->ime_flag = true;
 }
 
 static void proc_rst(cpuContext *ctx) {
@@ -295,21 +338,21 @@ IN_PROC processors[] = {
     [IN_ADC] = proc_adc,
     [IN_SUB] = proc_sub,
     [IN_SBC] = proc_sbc,
-    // IN_AND
+    [IN_AND] = proc_and,
     [IN_XOR] = proc_xor,
-    // IN_OR
-    // IN_CP
+    [IN_OR] = proc_or,
+    [IN_CP] = proc_cp,
     [IN_POP] = proc_pop,
     [IN_JP] = proc_jp,
     [IN_PUSH] = proc_push,
     [IN_RET] = proc_ret,
-    // IN_CB
+    [IN_CB] = proc_cb,
     [IN_CALL] = proc_call,
     [IN_RETI] = proc_reti,
     [IN_LDH] = proc_ldh,
     // IN_JPHL
     [IN_DI] = proc_di,
-    // IN_EI
+    [IN_EI] = proc_ei,
     [IN_RST] = proc_rst,
     // IN_ERR
 
@@ -330,3 +373,22 @@ IN_PROC processors[] = {
 IN_PROC inst_get_processor(inType type) {
     return processors[type];
 };
+
+regType rg_lookup[] = {
+    RG_B,
+    RG_C,
+    RG_D,
+    RG_E,
+    RG_F,
+    RG_H,
+    RG_L,
+    RG_HL,
+    RG_A
+};
+
+regType rg_decode(u8 reg) {
+    if (reg <= 0b111) {
+        return rg_lookup[reg];
+    }
+    return RG_NONE;
+}
