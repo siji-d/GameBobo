@@ -1,9 +1,10 @@
 #include <emu.h>
-#include <stdio.h>
+#include <pthread.h>
+#include <unistd.h>
 #include <cart.h>
 #include <cpu.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
+#include <ui.h>
+#include <timer.h>
 
 static emuContext ctx;
 
@@ -11,8 +12,30 @@ emuContext *emu_get_context() {
     return &ctx;
 }
 
-void delay(u32 ms) {
-    SDL_Delay(ms);
+void *cpu_run(void *p) {// MAIN CPU THREAD
+    timer_init();
+    cpu_init();
+
+    ctx.running = true;
+    ctx.paused = false;
+    ctx.ticks = 0;
+
+    while(ctx.running) {
+        if (ctx.paused) {
+            delay(10);
+            continue;
+        }
+
+        if (!cpu_step()) {
+            printf("CPU halted\n");
+            return 0;
+        }
+
+        
+    }
+
+    return 0;
+
 }
 
 int emu_run(int argc, char** argv) {
@@ -28,29 +51,17 @@ int emu_run(int argc, char** argv) {
 
     printf("Cart Loaded...\n");
 
-    SDL_Init(SDL_INIT_VIDEO);
-    printf("SDL INIT\n");
-    TTF_Init();
-    printf("TTF INIT\n");
+    ui_init();
+    pthread_t t1;
 
-    cpu_init();
-    
-    ctx.running = true;
-    ctx.paused = false;
-    ctx.ticks = 0;
+    if (pthread_create(&t1, NULL, cpu_run, NULL)) {
+        fprintf(stderr, "Failed to start main thread\n");
+        return -1;
+    }
 
-    while(ctx.running) {
-        if (ctx.paused) {
-            delay(10);
-            continue;
-        }
-
-        if (!cpu_step()) {
-            printf("CPU halted\n");
-            return -3;
-        }
-
-        ctx.ticks++;
+    while(!ctx.die) {
+        usleep(1000);
+        ui_event_handler();
     }
     
     return 0;
@@ -58,4 +69,11 @@ int emu_run(int argc, char** argv) {
 
 void emu_cycles(int cycles){
     //spend some cycles for accuracy and sync
+    int n = cycles * 4;
+    
+    for (int i = 0; i<n; i++) {
+        ctx.ticks++;
+        timer_tick();
+    }
+
 }

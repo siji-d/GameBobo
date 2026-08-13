@@ -8,7 +8,7 @@ extern cpuContext ctx;
 void fetch_data() {
     ctx.mem_dest = 0;
     ctx.dest_is_mem = false;
-
+    
     if (ctx.inst == NULL) {
         return;
     }
@@ -116,7 +116,7 @@ void fetch_data() {
         case AM_D8:
             ctx.fetched_data = bus_read(ctx.regs.pc);
             emu_cycles(1);
-            ctx.regs.pc++; 
+            ctx.regs.pc++;
             return;
 
         case AM_A16_R:

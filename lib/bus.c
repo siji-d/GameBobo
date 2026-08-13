@@ -1,6 +1,7 @@
 #include <bus.h>
 #include <cart.h>
 #include <ram.h>
+#include <io.h>
 #include <cpu.h>
 
 // 0x0000 - 0x3FFF : ROM BANK 0
@@ -21,53 +22,54 @@
 
 
 u8 bus_read(u16 addr) {
-    if (addr < 0x8000u){
+    //printf("bus read at address 0x%4.4X\n", addr);
+    if (addr < 0x8000){
         //ROM Data
         return cart_read(addr);
         
-    } else if (addr < 0xA000u) {
+    } else if (addr < 0xA000) {
         //VRAM
         printf("UNSUPPORTED BUS READ at address 0x%4.4X\n", addr);
-        NO_IMP;
+        //NO_IMP;
 
-    } else if (addr < 0xC000u) {
+    } else if (addr < 0xC000) {
         //EXTERNAL CART RAM
         return cart_read(addr);
         //NO_IMP;
 
-    } else if (addr < 0xE000u) {
+    } else if (addr < 0xE000) {
         //WORK RAM
         return wram_read(addr);
         
-    } else if (addr < 0xFE00u) {
+    } else if (addr < 0xFE00) {
         //RESERVED ECHO RAM
         printf("UNSUPPORTED BUS READ at address 0x%4.4X\n", addr);
-        NO_IMP;
+        //NO_IMP;
 
-    } else if (addr < 0xFEA0u) {
+    } else if (addr < 0xFEA0) {
         //OBJECT ATTRIBUTE MEMORY
         printf("UNSUPPORTED BUS READ at address 0x%4.4X\n", addr);
-        NO_IMP;
+        //NO_IMP;
         
-    } else if (addr < 0xFF00u) {
+    } else if (addr < 0xFF00) {
         //RESERVED - UNUSABLE
         printf("UNSUPPORTED BUS READ at address 0x%4.4X\n", addr);
-        NO_IMP;
+        //NO_IMP;
         
-    } else if (addr == 0xFF0Fu) {
-        //CPU IF REGISTER
-        return get_if_register();
+    // } else if (addr == 0xFF0F) {
+    //     //CPU IF REGISTER
+    //     return get_itr_flags();
 
-    } else if (addr < 0xFF80u) {
+    } else if (addr < 0xFF80) {
         //IO REGISTERS
-        printf("UNSUPPORTED BUS READ at address 0x%4.4X\n", addr);
+        return io_read(addr);
         //NO_IMP;
     
-    } else if (addr < 0xFFFFu) {
+    } else if (addr < 0xFFFF) {
         //HIGH RAM
         return hram_read(addr);
         
-    } else if (addr == 0xFFFFu) {
+    } else if (addr == 0xFFFF) {
         //CPU IE REGISTER
         return get_ie_register();
         
@@ -78,52 +80,52 @@ u8 bus_read(u16 addr) {
 }
 
 void bus_write(u16 addr, u8 val) {
-    if (addr < 0x8000u){
+    //printf("bus write to 0x%4.4X\n", addr);
+    if (addr < 0x8000){
         //ROM Data
         cart_write(addr, val);
         
-    } else if (addr < 0xA000u) {
+    } else if (addr < 0xA000) {
         //VRAM
         printf("UNSUPPORTED BUS WRITE at address 0x%4.4X\n", addr);
-        NO_IMP;
+        //NO_IMP;
 
-    } else if (addr < 0xC000u) {
+    } else if (addr < 0xC000) {
         //EXTERNAL CART RAM
         cart_write(addr, val);
         //NO_IMP;
 
-    } else if (addr < 0xE000u) {
+    } else if (addr < 0xE000) {
         //WORK RAM
         wram_write(addr, val);
         
-    } else if (addr < 0xFE00u) {
+    } else if (addr < 0xFE00) {
         //RESERVED ECHO RAM
         printf("UNSUPPORTED BUS WRITE at address 0x%4.4X\n", addr);
-        NO_IMP;
-
-    } else if (addr < 0xFEA0u) {
-        //OBJECT ATTRIBUTE MEMORY
-        printf("UNSUPPORTED BUS WRITE at address 0x%4.4X\n", addr);
-        NO_IMP;
-        
-    } else if (addr < 0xFF00u) {
-        //RESERVED - UNUSABLE
-        printf("UNSUPPORTED BUS WRITE at address 0x%4.4X\n", addr);
-        NO_IMP;
-        
-    }  else if (addr == 0xFF0Fu) {
-        set_if_register(val);
-        
-    } else if (addr < 0xFF80u) {
-        //IO REGISTERS
-        printf("UNSUPPORTED (i/o reg) BUS WRITE at address 0x%4.4X\n", addr);
         //NO_IMP;
 
-    } else if (addr < 0xFFFFu) {
+    } else if (addr < 0xFEA0) {
+        //OBJECT ATTRIBUTE MEMORY
+        printf("UNSUPPORTED BUS WRITE at address 0x%4.4X\n", addr);
+        //NO_IMP;
+        
+    } else if (addr < 0xFF00) {
+        //RESERVED - UNUSABLE
+        printf("UNSUPPORTED BUS WRITE at address 0x%4.4X\n", addr);
+        //NO_IMP;
+        
+    // }  else if (addr == 0xFF0F) {
+    //     set_itr_flags(val);
+        
+    } else if (addr < 0xFF80) {
+        //IO REGISTERS
+        io_write(addr, val);
+
+    } else if (addr < 0xFFFF) {
         //HIGH RAM
         hram_write(addr, val);
         
-    } else if (addr == 0xFFFFu) {
+    } else if (addr == 0xFFFF) {
         //CPU IE REGISTER
         set_ie_register(val);
         
@@ -134,14 +136,13 @@ void bus_write(u16 addr, u8 val) {
 }
 
 u16 bus_read16(u16 addr) {
-    u16 hi = bus_read(addr);
-    u16 lo = bus_read(addr + 1);
+    u16 lo = bus_read(addr);
+    u16 hi = bus_read(addr + 1);
 
     return (lo | hi << 8);
 }
  
 void bus_write16(u16 addr, u16 val) {
-    bus_write(addr, (val & 0x00FF));
+    bus_write(addr, val & 0xFF);
     bus_write(addr + 1, (val >> 8) & 0xFF);
 }
-

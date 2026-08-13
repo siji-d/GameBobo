@@ -85,10 +85,18 @@ void set_reg8(regType reg, u8 val) {
         case RG_H: ctx.regs.h = (val & 0xFF); break;
         case RG_L: ctx.regs.l = (val & 0xFF); break; 
         case RG_HL: bus_write(read_reg(RG_HL), val); break;
-        default: printf("ooops bad reg8: %d", reg); break;
+        default: printf("ooops bad reg8: %d\n", reg); break;
     }
 }
 
 cpuRegisters *get_cpu_regs() {
     return &ctx.regs;
+}
+
+u8 get_itr_flags() {
+    return ctx.itr_flags;
+}
+
+void set_itr_flags(u8 flags) {
+    ctx.itr_flags = flags;
 }

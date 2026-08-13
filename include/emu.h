@@ -5,6 +5,7 @@ typedef struct {
     bool running;
     bool paused;
     u64 ticks;
+    bool die;
 } emuContext;
 
 int emu_run(int argc, char** argv);

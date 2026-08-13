@@ -100,7 +100,7 @@ typedef struct {
     regType reg_2;
     condType cond;
     u8 param;
-    //int cycles; possibly might be used to synch stuff later, 
+    //int cycles; possibly might be used to sync stuff later, 
 } instruction;
 
 instruction *instruction_by_opcode(u8 opcode);

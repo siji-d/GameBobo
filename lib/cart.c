@@ -175,5 +175,5 @@ u8 cart_read(u16 addr) {
 void cart_write(u16 addr, u8 val) {
     
     printf("cart write...\n");
-    NO_IMP;
+    //NO_IMP;
 }

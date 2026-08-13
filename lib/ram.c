@@ -2,9 +2,7 @@
 
 
 u16 WRAM_START = 0xC000;
-u16 WRAM_SIZE = 0x2000;
 u16 HRAM_START = 0xFF80;
-u16 HRAM_SIZE = 0x80;
 
 typedef struct {
     u8 wram[0x2000];
