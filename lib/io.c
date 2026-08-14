@@ -1,6 +1,8 @@
 #include <io.h>
 #include <timer.h>
 #include <cpu.h>
+#include <dma.h>
+#include <lcd.h>
 
 static u8 serial_data[2];
 
@@ -15,9 +17,14 @@ u8 io_read(u16 addr) {
         return timer_read(addr);
     }
 
+
     if (addr == 0xFF0F) { //IF REGISTER
         return get_itr_flags();
     } 
+
+    if (BETWEEN(addr, 0xFF40, 0xFF4B)) { //LCD CONTROL, STATUS
+        return lcd_read(addr);
+    }
 
     printf("UNSUPPORTED BUS READ at address 0x%4.4X\n", addr);
     return 0;
@@ -37,10 +44,16 @@ void io_write(u16 addr, u8 val) {
         timer_write(addr, val);
         return;
     }
+
     if (addr == 0xFF0F) { //IF REGISTER
         set_itr_flags(val);
         return;
-    } 
+    }
+
+    if (BETWEEN(addr, 0xFF40, 0xFF4B)) { //LCD CONTROL, STATUS
+        return lcd_write(addr, val);
+    }
+
 
     printf("UNSUPPORTED BUS READ at address 0x%4.4X\n", addr); 
     return;

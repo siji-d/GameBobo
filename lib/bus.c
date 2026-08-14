@@ -3,6 +3,8 @@
 #include <ram.h>
 #include <io.h>
 #include <cpu.h>
+#include <ppu.h>
+#include <dma.h>
 
 // 0x0000 - 0x3FFF : ROM BANK 0
 // 0x4000 - 0x7FFF : ROM BANK 1-N (Switchable)
@@ -29,13 +31,11 @@ u8 bus_read(u16 addr) {
         
     } else if (addr < 0xA000) {
         //VRAM
-        printf("UNSUPPORTED BUS READ at address 0x%4.4X\n", addr);
-        //NO_IMP;
+        return ppu_vram_read(addr);
 
     } else if (addr < 0xC000) {
         //EXTERNAL CART RAM
         return cart_read(addr);
-        //NO_IMP;
 
     } else if (addr < 0xE000) {
         //WORK RAM
@@ -44,26 +44,21 @@ u8 bus_read(u16 addr) {
     } else if (addr < 0xFE00) {
         //RESERVED ECHO RAM
         printf("UNSUPPORTED BUS READ at address 0x%4.4X\n", addr);
-        //NO_IMP;
 
     } else if (addr < 0xFEA0) {
-        //OBJECT ATTRIBUTE MEMORY
-        printf("UNSUPPORTED BUS READ at address 0x%4.4X\n", addr);
-        //NO_IMP;
+        //OAM
+        if (dma_transferring()) {
+            return 0xFF;
+        }
+        ppu_oam_read(addr);
         
     } else if (addr < 0xFF00) {
         //RESERVED - UNUSABLE
         printf("UNSUPPORTED BUS READ at address 0x%4.4X\n", addr);
-        //NO_IMP;
-        
-    // } else if (addr == 0xFF0F) {
-    //     //CPU IF REGISTER
-    //     return get_itr_flags();
 
     } else if (addr < 0xFF80) {
         //IO REGISTERS
         return io_read(addr);
-        //NO_IMP;
     
     } else if (addr < 0xFFFF) {
         //HIGH RAM
@@ -82,18 +77,16 @@ u8 bus_read(u16 addr) {
 void bus_write(u16 addr, u8 val) {
     //printf("bus write to 0x%4.4X\n", addr);
     if (addr < 0x8000){
-        //ROM Data
+        //ROM Data, bank stuff
         cart_write(addr, val);
         
     } else if (addr < 0xA000) {
         //VRAM
-        printf("UNSUPPORTED BUS WRITE at address 0x%4.4X\n", addr);
-        //NO_IMP;
+        ppu_vram_write(addr, val);
 
     } else if (addr < 0xC000) {
         //EXTERNAL CART RAM
         cart_write(addr, val);
-        //NO_IMP;
 
     } else if (addr < 0xE000) {
         //WORK RAM
@@ -102,20 +95,18 @@ void bus_write(u16 addr, u8 val) {
     } else if (addr < 0xFE00) {
         //RESERVED ECHO RAM
         printf("UNSUPPORTED BUS WRITE at address 0x%4.4X\n", addr);
-        //NO_IMP;
 
     } else if (addr < 0xFEA0) {
         //OBJECT ATTRIBUTE MEMORY
-        printf("UNSUPPORTED BUS WRITE at address 0x%4.4X\n", addr);
-        //NO_IMP;
+        if (dma_transferring()) {
+            return;
+        }
+        ppu_oam_write(addr, val);
+
         
     } else if (addr < 0xFF00) {
         //RESERVED - UNUSABLE
         printf("UNSUPPORTED BUS WRITE at address 0x%4.4X\n", addr);
-        //NO_IMP;
-        
-    // }  else if (addr == 0xFF0F) {
-    //     set_itr_flags(val);
         
     } else if (addr < 0xFF80) {
         //IO REGISTERS

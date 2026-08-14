@@ -1,4 +1,3 @@
-#pragma once
 #include <cpu.h>
 #include <bus.h>
 #include <emu.h>
@@ -8,6 +7,9 @@
 
 
 cpuContext ctx = {0};
+
+#define CPU_DEBUG 1
+#define CPU_STEPLOG 1
 
 void cpu_init() {
     ctx.regs.pc = 0x100;
@@ -64,8 +66,6 @@ static void step_log(u16 pc) {
         emu_get_context()->ticks, pc, inst, operands, ctx.regs.a, ctx.regs.b, ctx.regs.c, ctx.regs.d, ctx.regs.e, ctx.regs.h, ctx.regs.l,
        flags, ctx.regs.sp);
 
-       dbg_update();
-       dbg_print();
 }
 
 bool cpu_step() {
@@ -76,7 +76,9 @@ bool cpu_step() {
         emu_cycles(1);
         fetch_data();
 
-        step_log(current_pc);
+        if (CPU_STEPLOG) {step_log(current_pc);}
+        dbg_update();
+        if (CPU_DEBUG) {dbg_print();}
 
         execute();
 
