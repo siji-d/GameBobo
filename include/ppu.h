@@ -21,13 +21,6 @@ typedef struct {
 
 } oamSprite;
 
-#define OAM_CGB_PN(s)   ((s).flags & 0x07)
-#define OAM_CGB_BANK(s) (((s).flags >> 3) & 1)
-#define OAM_PN(s)       (((s).flags >> 4) & 1)
-#define OAM_X_FLIP(s)   (((s).flags >> 5) & 1)
-#define OAM_Y_FLIP(s)   (((s).flags >> 6) & 1)
-#define OAM_BGP(s)      (((s).flags >> 7) & 1)
-
 typedef struct _oamLineEntry {
     oamSprite entry;
     struct _oamLineEntry *next;
@@ -78,11 +71,13 @@ typedef struct {
 
     u8 fetched_entry_count;
     oamSprite fetched_entries[3]; //entries fetched during fifo pipeline processing
+    u8 window_line;
 
     pixelFifoContext pfc;
     u32 current_frame;
     u32 line_ticks;
     u32 *video_buffer;
+
     
 } ppuContext;
 
@@ -95,6 +90,8 @@ void ppu_tick();
 
 void pipeline_fifo_reset();
 void pipeline_proc();
+
+bool window_visible();
 
 void ppu_oam_write(u16 addr, u8 val);
 u8 ppu_oam_read(u16 addr);

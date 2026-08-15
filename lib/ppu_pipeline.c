@@ -2,6 +2,11 @@
 #include <lcd.h>
 #include <bus.h>
 
+bool window_visible() {
+    return LCDC_WIN_ENABLE && (get_lcd_context()->win_x >= 0) && (get_lcd_context()->win_x <= 166) && 
+            (get_lcd_context()->win_y >= 0) && (get_lcd_context()->win_y < YRES);
+}
+
 void pixel_fifo_push(u32 val) {
     fifoEntry *next = malloc(sizeof(fifoEntry));
     next->next = NULL;
@@ -129,6 +134,31 @@ void pipeline_load_sprite_tile() {
         }
 
     }
+
+}
+
+void pipeline_load_window_tile() {
+    if (!window_visible()) {
+        return;
+    }
+    u8 win_y = get_lcd_context()->win_y;
+
+    if ((get_ppu_context()->pfc.fetch_x + 7 >= get_lcd_context()->win_x) && 
+        (get_ppu_context()->pfc.fetch_x + 7 < get_lcd_context()->win_x + YRES + 14)) {
+    
+        if (get_lcd_context()->ly >= win_y && get_lcd_context()->ly < win_y + XRES) {
+            u8 w_tile_y = get_ppu_context()->window_line / 8;
+
+            get_ppu_context()->pfc.bgw_fetch_data[0] = bus_read(LCDC_WIN_MAP_AREA +
+                ((get_ppu_context()->pfc.fetch_x + 7 - get_lcd_context()->win_x) / 8) +
+                (w_tile_y * 32));
+            
+            if (LCDC_BGW_DATA_AREA == 0x8800) {
+                get_ppu_context()->pfc.bgw_fetch_data[0] += 128;
+            }
+        }
+
+    }
 }
 
 void pipeline_load_sprite_data(u8 offset) {
@@ -164,6 +194,8 @@ void pipeline_fetch() {
                 if (LCDC_BGW_DATA_AREA == 0x8800) {
                     get_ppu_context()->pfc.bgw_fetch_data[0] += 128;
                 }
+
+                pipeline_load_window_tile();
             }
 
             if (LCDC_OBJ_ENABLE && get_ppu_context()->line_sprites) {

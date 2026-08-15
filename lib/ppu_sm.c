@@ -5,12 +5,16 @@
 #include <lcd.h>
 #include <string.h>
 
-static u32 target_frame_time = 1000 / 60; //ms per frame
+static u32 target_frame_time = 1000 / 100; //ms per frame
 static long prev_frame_time = 0;
 static long start_timer = 0;
 static long frame_count = 0;
 
 void inc_ly() {
+    if (window_visible() && (get_lcd_context()->ly >= get_lcd_context()->win_y) && (get_lcd_context()->ly < get_lcd_context()->win_y + YRES)) {
+        get_ppu_context()->window_line++;
+    }
+
     get_lcd_context()->ly++;
 
     if (get_lcd_context()->ly == get_lcd_context()->lyc) {
@@ -38,7 +42,7 @@ void ppu_mode_hblank() {
 
             get_ppu_context()->current_frame++;
 
-            //calc fps?
+            //calc fps ;-;
             u32 end = get_ticks();
             u32 frame_time = end - prev_frame_time;
 
@@ -73,6 +77,7 @@ void ppu_mode_vblank() {
         if (get_lcd_context()->ly >= LINES_PER_FRAME) {
             STAT_MODE_SET(MODE_OAM);
             get_lcd_context()->ly = 0;
+            get_ppu_context()->window_line = 0;
 
         }
         get_ppu_context()->line_ticks = 0;
