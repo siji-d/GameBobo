@@ -3,6 +3,7 @@
 #include <cpu.h>
 #include <interrupts.h>
 #include <lcd.h>
+#include <string.h>
 
 static u32 target_frame_time = 1000 / 60; //ms per frame
 static long prev_frame_time = 0;
@@ -50,7 +51,7 @@ void ppu_mode_hblank() {
                 start_timer = end;
                 frame_count = 0;
 
-                //printf("FPS: %d\n", fps);
+                printf("FPS: %d\n", fps);
             }
             //printf("current frame: %ld\n", frame_count);
             frame_count++;
@@ -79,17 +80,89 @@ void ppu_mode_vblank() {
 
 }
 
+void load_line_sprites() {
+    int y = get_lcd_context()->ly;
+
+    u8 spr_height = LCDC_OBJ_HEIGHT;
+    memset(get_ppu_context()->line_entry_array, 0, sizeof(get_ppu_context()->line_entry_array)); 
+
+    for (int i = 0; i < 40; i++) {
+        oamSprite spr = get_ppu_context()->oam_ram[i];
+
+        if (!spr.x) {
+            continue;
+        }
+
+        if (get_ppu_context()->line_sprite_count >= 10) {
+            break;
+        }
+
+        if (spr.y <= y + 16 && spr.y + spr_height > y + 16) {
+            oamLineEntry *entry = &get_ppu_context()->line_entry_array[get_ppu_context()->line_sprite_count++];
+            entry->entry = spr;
+            entry->next = NULL;
+
+            if (!get_ppu_context()->line_sprites || get_ppu_context()->line_sprites->entry.x > spr.x) {
+                entry->next = get_ppu_context()->line_sprites;
+                get_ppu_context()->line_sprites = entry;
+                continue;
+            }
+
+            oamLineEntry *le = get_ppu_context()->line_sprites;
+            oamLineEntry *prev = le;
+
+            while(le) {
+                if (le->entry.x > spr.x) {
+                    prev->next = entry;
+                    entry->next = le;
+                    break;
+                }
+
+                if (!le->next) {
+                    le->next = entry;
+                    break;
+                }
+
+                prev = le;
+                le = le->next;
+
+            }
+
+        }
+    }
+}
+
 void ppu_mode_oam() {
     if (get_ppu_context()->line_ticks >= 80) {
         STAT_MODE_SET(MODE_TRANSFER);
 
+        get_ppu_context()->pfc.fetch_state = FS_TILE;
+        get_ppu_context()->pfc.line_x = 0;
+        get_ppu_context()->pfc.fetch_x = 0;
+        get_ppu_context()->pfc.pushed_x = 0;
+        get_ppu_context()->pfc.fifo_x = 0;
+
+    };
+
+    if (get_ppu_context()->line_ticks == 1) {
+        get_ppu_context()->line_sprites = 0;
+        get_ppu_context()->line_sprite_count = 0;
+
+        load_line_sprites();
     }
 
 }
 
 void ppu_mode_transfer() {
-    if (get_ppu_context()->line_ticks >= 80 + 172) {
+    pipeline_proc();
+    if (get_ppu_context()->pfc.pushed_x >= XRES) {
+        pipeline_fifo_reset();
+        
         STAT_MODE_SET(MODE_HBLANK);
+
+        if (STAT_ITR(SS_HBLANK)) {
+            cpu_request_interrupt(IT_LCD_STAT);
+        }
     }
 
 

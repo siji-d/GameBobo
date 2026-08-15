@@ -1,4 +1,5 @@
 #include <ui.h>
+#include <ppu.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <bus.h>
@@ -14,7 +15,7 @@ SDL_Renderer *sdlDebugRenderer;
 SDL_Texture *sdlDebugTexture;
 SDL_Surface *debugScreen;
 
-static int scale = 3;
+static int scale = 4;
 static unsigned long tile_colours[4] = {0xFFFFFFFF, 0xFFAAAAAA, 0xFF555555, 0xFF000000};
 
 void delay(u32 ms) {
@@ -32,6 +33,11 @@ void ui_init() {
     printf("TTF INIT\n");
 
     SDL_CreateWindowAndRenderer(SCREEN_WIDTH, SCREEN_HEIGHT, 0, &sdlWindow, &sdlRenderer);
+
+    screen = SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32,
+                                            0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
+    sdlTexture = SDL_CreateTexture(sdlRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
+                                                SCREEN_WIDTH, SCREEN_HEIGHT);
 
     SDL_CreateWindowAndRenderer(16 * 8 * scale, 32 * 8 * scale, 0, &sdlDebugWindow, &sdlDebugRenderer);
 
@@ -70,14 +76,10 @@ void draw_tile(SDL_Surface *surface, u16 start, u16 tile, int x, int y) {
     }
 }
 
-void update_main_window() {
-
-}
-
 void update_dbg_window() {
     int xDraw = 0;
     int yDraw = 0;
-    u16 tileNum = 0;
+    int tileNum = 0;
     
     SDL_Rect rct;
     rct.x = 0;
@@ -110,6 +112,28 @@ void update_dbg_window() {
 
 void ui_update() {
     //update_main_window();
+    SDL_Rect rct;
+    rct.x = rct.y = 0;
+    rct.w = rct.h = 2048;
+
+    u32 *video_buffer = get_ppu_context()->video_buffer;
+
+    for (int line = 0; line < YRES; line++) {
+        for (int x = 0; x < XRES; x++) {
+            rct.x = x * scale;
+            rct.y = line * scale;
+            rct.w = scale;
+            rct.h = scale;
+
+            SDL_FillRect(screen, &rct, video_buffer[x + (line * XRES)]);
+        } 
+    }
+
+    SDL_UpdateTexture(sdlTexture, NULL, screen->pixels, screen->pitch);
+    SDL_RenderClear(sdlRenderer);
+	SDL_RenderCopy(sdlRenderer, sdlTexture , NULL, NULL);
+	SDL_RenderPresent(sdlRenderer);
+    
     update_dbg_window();
 }
 

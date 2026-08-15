@@ -14,9 +14,20 @@ void ppu_init() {
     ctx.line_ticks = 0;
     ctx.video_buffer = malloc(YRES * XRES * sizeof(u32));
 
+    ctx.pfc.line_x = 0;
+    ctx.pfc.pushed_x = 0;
+    ctx.pfc.fetch_x = 0;
+    ctx.pfc.pixel_fifo.size = 0;
+    ctx.pfc.pixel_fifo.head = ctx.pfc.pixel_fifo.tail = NULL;
+    ctx.pfc.fetch_state = FS_TILE;
+
+    ctx.line_sprites = 0;
+    ctx.fetched_entry_count = 0;
+
+
     lcd_init();
     STAT_MODE_SET(MODE_OAM);
-    printf("LCDS MODE: %d\n", STAT_MODE);
+    //printf("LCDS MODE: %d\n", STAT_MODE);
 
     memset(ctx.oam_ram, 0, sizeof(ctx.oam_ram));
     memset(ctx.video_buffer, 0, YRES * XRES * sizeof(u32));
