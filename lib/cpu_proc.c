@@ -103,8 +103,7 @@ static void proc_ld(cpuContext *ctx) {
 }
 
 static void proc_stop(cpuContext *ctx) {
-    printf("HIT A STOP!, %02X\n", ctx->opcode );
-    NO_IMP;
+    printf("HIT A STOP!, %02X\n", ctx->opcode ); 
 }
 
 static void proc_daa(cpuContext *ctx) {

@@ -3,10 +3,15 @@
 #include <cpu.h>
 #include <dma.h>
 #include <lcd.h>
+#include <gamepad.h>
 
 static u8 serial_data[2];
 
 u8 io_read(u16 addr) {
+    if (addr == 0xFF00) { //JOYPAD
+        return get_gamepad_output();
+    }
+
     if (addr == 0xFF01) { //SERIAL TRANSFER DATA
         return serial_data[0];
     } else if (addr == 0xFF02)  {//SERIAL TRANSFER CONTROL
@@ -26,11 +31,15 @@ u8 io_read(u16 addr) {
         return lcd_read(addr);
     }
 
-    printf("UNSUPPORTED BUS READ at address 0x%4.4X\n", addr);
+    //printf("UNSUPPORTED BUS READ at address 0x%4.4X\n", addr);
     return 0;
 }
 
 void io_write(u16 addr, u8 val) {
+    if (addr == 0xFF00) { //JOYPAD
+        gamepad_set_sel(val);
+        return;
+    }
     
     if (addr == 0xFF01) { //SERIAL TRANSFER DATA
         serial_data[0] = val;
@@ -55,7 +64,7 @@ void io_write(u16 addr, u8 val) {
     }
 
 
-    printf("UNSUPPORTED BUS READ at address 0x%4.4X\n", addr); 
+    //printf("UNSUPPORTED BUS READ at address 0x%4.4X\n", addr); 
     return;
 
 }

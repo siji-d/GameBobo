@@ -35,9 +35,11 @@ void update_palette(u8 val, u8 pal) {
     switch (pal) {
         case 1:
             p_colours = ctx.sp1_colours;
+            break;
 
         case 2:
             p_colours = ctx.sp2_colours;
+            break;
     }
 
     p_colours[0] = default_colours[val & 0b11];

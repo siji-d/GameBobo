@@ -4,6 +4,7 @@
 #include <interrupts.h>
 #include <lcd.h>
 #include <string.h>
+#include <cart.h>
 
 static u32 target_frame_time = 1000 / 100; //ms per frame
 static long prev_frame_time = 0;
@@ -56,6 +57,10 @@ void ppu_mode_hblank() {
                 frame_count = 0;
 
                 printf("FPS: %d\n", fps);
+
+                if (cart_need_save()) {
+                    cart_battery_save();
+                }
             }
             //printf("current frame: %ld\n", frame_count);
             frame_count++;

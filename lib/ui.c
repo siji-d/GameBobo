@@ -4,6 +4,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <bus.h>
 #include <emu.h>
+#include <gamepad.h>
 
 SDL_Window *sdlWindow;
 SDL_Renderer *sdlRenderer;
@@ -137,14 +138,66 @@ void ui_update() {
     update_dbg_window();
 }
 
+void ui_on_key(bool down, u32 key_code) {
+
+    switch (key_code) {
+        case SDLK_z: get_gamepad_state()->a = down; break;
+        case SDLK_x: get_gamepad_state()->b = down; break;
+        case SDLK_RETURN: get_gamepad_state()->start = down; break;
+
+        case SDLK_RSHIFT:
+        case SDLK_LSHIFT: get_gamepad_state()->select = down; break;
+
+        case SDLK_UP:
+        case SDLK_w: get_gamepad_state()->up = down; break;
+
+        case SDLK_DOWN:
+        case SDLK_s: get_gamepad_state()->down = down; break;
+
+        case SDLK_LEFT: 
+        case SDLK_a: get_gamepad_state()->left = down; break;
+
+        case SDLK_RIGHT:
+        case SDLK_d: get_gamepad_state()->right = down; break;
+
+    }
+
+}
+
+void ui_on_button(bool down, u8 button) {
+
+    switch (button) {
+        case SDL_CONTROLLER_BUTTON_A: get_gamepad_state()->a = down; break;
+        case SDL_CONTROLLER_BUTTON_B: get_gamepad_state()->b = down; break;
+        case SDL_CONTROLLER_BUTTON_START: get_gamepad_state()->start = down; break;
+
+        case SDL_CONTROLLER_BUTTON_GUIDE: get_gamepad_state()->select = down; break;
+
+        case SDL_CONTROLLER_BUTTON_DPAD_UP: get_gamepad_state()->up = down; break;
+
+        case SDL_CONTROLLER_BUTTON_DPAD_DOWN: get_gamepad_state()->down = down; break;
+
+        case SDL_CONTROLLER_BUTTON_DPAD_LEFT: get_gamepad_state()->left = down; break;
+
+        case SDL_CONTROLLER_BUTTON_DPAD_RIGHT: get_gamepad_state()->right = down; break;
+
+    }
+
+}
+
 void ui_event_handler() {
     SDL_Event e;
     while (SDL_PollEvent(&e) > 0) {
-        // SDL_UpdateWindowSurface(sdlWindow)
-        // SDL_UpdateWindowSurface(sdlTraceWindow)
-        // SDL_UpdateWindowSurface(sdlDebugWindow)
-        
 
+        switch (e.type) {
+            case SDL_KEYDOWN: ui_on_key(true, e.key.keysym.sym); 
+                printf("button pressed %d\n", e.key.keysym.sym); break;
+            case SDL_KEYUP: ui_on_key(false, e.key.keysym.sym); break;
+            case SDL_CONTROLLERBUTTONDOWN: ui_on_button(true, e.cbutton.button);
+                printf("button pressed %d\n", e.cbutton.button); break;
+            case SDL_CONTROLLERBUTTONUP: ui_on_button(false, e.cbutton.button); break;
+        }
+        
         if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_CLOSE) {
             emu_get_context()->die = true;
         }
