@@ -4,6 +4,7 @@
 #include <dma.h>
 #include <lcd.h>
 #include <gamepad.h>
+#include <apu.h>
 
 static u8 serial_data[2];
 
@@ -26,6 +27,14 @@ u8 io_read(u16 addr) {
     if (addr == 0xFF0F) { //IF REGISTER
         return get_itr_flags();
     } 
+
+    if (BETWEEN(addr, 0xFF10, 0xFF26)) {
+        return apu_read(addr);
+    }
+
+    if (BETWEEN(addr, 0xFF30, 0xFF3F)) {
+        return apu_wave_ram_read(addr);
+    }
 
     if (BETWEEN(addr, 0xFF40, 0xFF4B)) { //LCD CONTROL, STATUS
         return lcd_read(addr);
@@ -56,6 +65,16 @@ void io_write(u16 addr, u8 val) {
 
     if (addr == 0xFF0F) { //IF REGISTER
         set_itr_flags(val);
+        return;
+    }
+
+    if (BETWEEN(addr, 0xFF10, 0xFF26)) {
+        apu_write(addr, val);
+        return;
+    }
+
+    if (BETWEEN(addr, 0xFF30, 0xFF3F)) {
+        apu_wave_ram_write(addr, val);
         return;
     }
 

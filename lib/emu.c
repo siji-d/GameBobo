@@ -7,6 +7,7 @@
 #include <timer.h>
 #include <dma.h>
 #include <ppu.h> 
+#include <apu.h>
 
 static emuContext ctx;
 
@@ -18,6 +19,7 @@ void *cpu_run(void *p) {// MAIN CPU THREAD
     timer_init();
     cpu_init();
     ppu_init();
+    apu_init();
 
     ctx.running = true;
     ctx.paused = false;
@@ -90,6 +92,7 @@ void emu_cycles(int cycles) {
             ctx.ticks++;
             timer_tick();
             ppu_tick();
+            apu_tick();
         }
 
         dma_tick();

@@ -5,11 +5,13 @@
 #include <bus.h>
 #include <emu.h>
 #include <gamepad.h>
+#include <apu.h>
 
 SDL_Window *sdlWindow;
 SDL_Renderer *sdlRenderer;
 SDL_Texture *sdlTexture;
 SDL_Surface *screen;
+SDL_AudioDeviceID audio_device;
 
 SDL_Window *sdlDebugWindow;
 SDL_Renderer *sdlDebugRenderer;
@@ -29,9 +31,24 @@ u32 get_ticks() {
 
 void ui_init() {
     SDL_Init(SDL_INIT_VIDEO);
+    SDL_Init(SDL_INIT_AUDIO);
     printf("SDL INIT\n");
     TTF_Init();
     printf("TTF INIT\n");
+
+    SDL_AudioSpec want = {0}, have;
+    want.freq = APU_SAMPLE_RATE;
+    want.format = AUDIO_F32SYS;
+    want.channels = 2;
+    want.samples = 1024;
+    want.callback = NULL;
+
+    audio_device = SDL_OpenAudioDevice(NULL, 0, &want, &have, 0);
+    if (audio_device == 0) {
+       printf("SDL audio open failed: %s\n", SDL_GetError());
+    }
+    SDL_PauseAudioDevice(audio_device, 0);
+
 
     SDL_CreateWindowAndRenderer(SCREEN_WIDTH, SCREEN_HEIGHT, 0, &sdlWindow, &sdlRenderer);
 
@@ -134,7 +151,17 @@ void ui_update() {
     SDL_RenderClear(sdlRenderer);
 	SDL_RenderCopy(sdlRenderer, sdlTexture , NULL, NULL);
 	SDL_RenderPresent(sdlRenderer);
-    
+
+    static float out[2048 * 2];
+    int frames = apu_read_samples(out, 2048);
+    //printf("frames: %d\n", frames);
+    if (frames > 0) {
+        u32 queued_bytes = SDL_GetQueuedAudioSize(audio_device);
+        u32 max_queued = (u32)(APU_SAMPLE_RATE * 2 * sizeof(float) * 0.1);
+        if (queued_bytes < max_queued) {
+            SDL_QueueAudio(audio_device, out, frames * 2 * sizeof(float));
+        }
+    }
     update_dbg_window();
 }
 
